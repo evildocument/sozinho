@@ -1,6 +1,6 @@
 import re
 from playwright.sync_api import sync_playwright
-# prototipo 1
+# prototipo 1.5
 '''
     Limitações:
         De forma gratuita, é possível carregar apenas 3 páginas
@@ -84,12 +84,12 @@ def escavador_scrapper(name_search, in_sequence=False, state=False, ends_with=Fa
                 list_of_results = parsed_result[1]
                 # valor de resultados
                 number_of_results = parsed_result[0]
-                new_parsed_result = [0]
+                new_parsed_result = [0, []]
                 for list_of_lists in range(number_of_results):
                     person_name = list_of_results[list_of_lists][0]
                     if person_name.startswith(f"{name_search}"):
                         new_parsed_result[0] += 1
-                        new_parsed_result.append(list_of_results[list_of_lists])
+                        new_parsed_result[1].append(list_of_results[list_of_lists])
                     else:
                         pass
                 
@@ -104,10 +104,22 @@ def escavador_scrapper(name_search, in_sequence=False, state=False, ends_with=Fa
         return all_results
  
 def escavador_exhibit(dict_results):
+    """
+        TODO: diferenciar de resultados de apenas 1 pagina e resultados filtrados (e.g nome exato)
+        que só preenchem a 1 pagina (o escavador mostra primeiro os nomes mais parecidos)
+    """
+    final_string = ""
     number_of_pages = len(dict_results)
-    for element in range(number_of_pages):
-        pass
-    return
+    
+    for page in range(number_of_pages):
+        
+        print(f"Resultado da {page+1} página:\n")
+        number_of_elements = dict_results[page+1][0]
+        list_of_elements = dict_results[page+1][1]
+        for element in range(number_of_elements):
+            final_string += "\n".join(list_of_elements[element])
+    return final_string
        
-name_search = input("> ")
-print(escavador_scrapper(name_search, in_sequence=True))
+
+
+
