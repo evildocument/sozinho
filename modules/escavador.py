@@ -2,6 +2,7 @@ import re
 from playwright.sync_api import sync_playwright
 # prototipo 1.5
 '''
+    Eu sei de agora que esse código não é o mais otimal, mas tenha pena da minha pobre alma, faz um bom tempo que não programo algo
     Limitações:
         De forma gratuita, é possível carregar apenas 3 páginas
         Também só é possível exibir 4 processos, independente de ser inativo ou ativo
@@ -16,8 +17,8 @@ TODO:
     
     ERROR CHECKING!!!
     
-    
-    Add highlight to state keywords (e.g processes found in >Bahia<) and important info in general
+
+    Add highlight to is_from_state keywords (e.g processes found in >Bahia<) and important info in general
     Add the option to showing a reason for a legal action
 '''
 
@@ -30,7 +31,7 @@ def escavador_parser(content):
         
         A function to filter every result that isn't actual people, like references or other HTML elements
     '''
-    results = [content.nth(i).evaluate("el => el.innerText") for i in range(content.count())]
+    raw_request = [content.nth(i).evaluate("el => el.innerText") for i in range(content.count())]
     
     # remove toda referência que não é a pessoa em si
     # também removendo os 4 primeiras resultados do HTML, 
@@ -38,12 +39,24 @@ def escavador_parser(content):
     
     # remove every reference that is not the person itself
     # also the first 4 results are just junk from the HTML
-    filtered_res = [item for item in results if 'página' not in item.lower()]
-    filtered_res = [filtered_res[i].split("\n") for i in range(len(filtered_res))]
-    return [len(filtered_res[4:]), filtered_res[4:]]
+    filtered_request = [item for item in raw_request if 'página' not in item.lower()]
+    filtered_request = [filtered_request[i].split("\n") for i in range(len(filtered_request))]
+    result_list = filtered_request[4:]
+    list_of_dicts = []
+    
+    for each_result in range(len(result_list)):
+        result_dict = {
+        "nome": result_list[each_result][0],
+        "url": result_list[each_result][1],
+        "participacoes": result_list[each_result][3],
+        "bio": result_list[each_result][5]
+        }
+        list_of_dicts.append(result_dict)
+    
+    return list_of_dicts
 
 
-def escavador_scrapper(name_search, in_sequence=False, state=False, ends_with=False):
+def escavador_scrapper(name_search, is_in_sequence=False, is_from_state=None, ends_with=False):
     """
         Função que serve para realizar o scrapping nas 3 páginas iniciais do escavador, retornando um dicionário
         com o número de páginas como chaves, e os valoes uma lista com o primeiro index o numero de resultados
@@ -51,8 +64,8 @@ def escavador_scrapper(name_search, in_sequence=False, state=False, ends_with=Fa
         {1: [a [b,c]], 2: [a [b,c]]}
         
         name_search => o nome a ser pesquisado // implemented => to error check
-        in_sequence => o nome está em sequência? é exatamente esse? // implemented => to error check
-        state => o estado para ser pesquisado // to implement // 
+        is_in_sequence => o nome está em sequência? é exatamente esse? // implemented => to error check
+        is_from_state => o estado para ser pesquisado // to implement // 
         ends_with => se o nome do meio for desconhecido // to implement
     """
     with sync_playwright() as driver:
@@ -65,7 +78,8 @@ def escavador_scrapper(name_search, in_sequence=False, state=False, ends_with=Fa
         )
         page = context.new_page()
         
-        all_results = {}
+        
+        dict_master = {}
         '''
             TODO: adicionar lógica para checar se houverem 3 ou menos resultados IDENTICOS na página inicial, automaticamente expandir nos motivos
             dos processos
@@ -75,35 +89,25 @@ def escavador_scrapper(name_search, in_sequence=False, state=False, ends_with=Fa
             page.wait_for_selector('div.item')
             
             div_content = page.locator('div.item')
-            parsed_result = escavador_parser(div_content)
-            
-            
-            
-            if in_sequence is True:
-                # lista de resultados
-                list_of_results = parsed_result[1]
-                # valor de resultados
-                number_of_results = parsed_result[0]
-                new_parsed_result = [0, []]
-                for list_of_lists in range(number_of_results):
-                    person_name = list_of_results[list_of_lists][0]
-                    if person_name.startswith(f"{name_search}"):
-                        new_parsed_result[0] += 1
-                        new_parsed_result[1].append(list_of_results[list_of_lists])
-                    else:
-                        pass
-                
-                all_results[current_page+1] = new_parsed_result
+            parsed_list = escavador_parser(div_content)
+            if is_in_sequence and is_from_state and ends_with:
+                pass
+            elif is_in_sequence and is_from_state != None:
+                dict_master[current_page+1] = from_state(in_sequence(parsed_list, name_search), is_from_state)
+            elif is_from_state and ends_with:
+                pass
             else:
-                all_results[current_page+1] = parsed_result
-            return all_results
-                        
-                    
-            
+                if is_in_sequence:
+                    dict_master[current_page+1] = in_sequence(parsed_list, name_search)
+                if is_from_state != None:
+                    dict_master[current_page+1] = from_state(parsed_list, is_from_state)
+                if ends_with:
+                    pass
+    
         browser.close()
-        return all_results
+        return dict_master
  
-def escavador_exhibit(dict_results):
+def escavador_exhibit(dict_results, ):
     """
         TODO: diferenciar de resultados de apenas 1 pagina e resultados filtrados (e.g nome exato)
         que só preenchem a 1 pagina (o escavador mostra primeiro os nomes mais parecidos)
@@ -112,14 +116,78 @@ def escavador_exhibit(dict_results):
     number_of_pages = len(dict_results)
     
     for page in range(number_of_pages):
-        
         print(f"Resultado da {page+1} página:\n")
         number_of_elements = dict_results[page+1][0]
         list_of_elements = dict_results[page+1][1]
         for element in range(number_of_elements):
             final_string += "\n".join(list_of_elements[element])
     return final_string
+  
+  
        
+def in_sequence(result_dict, name_search):
+    filtered_results = []
+    for values in range(len(result_dict)):
+        name = result_dict[values]["nome"]
+        if name.lower().startswith(name_search.lower()):
+            filtered_results.append(result_dict[values])
+        else:
+            pass
+    return filtered_results
 
+
+def from_state(result_dict, state_search):
+    filtered_results = []
+    brazilian_states = {
+    "acre": ["acre", "ac"],
+    "alagoas": ["alagoas", "al"],
+    "amapá": ["amapa", "ap"],
+    "amazonas": ["amazonas", "am"],
+    "bahia": ["bahia", "ba"],
+    "ceará": ["ceara", "ce"],
+    "distrito federal": ["distritofederal", "df"],
+    "espírito santo": ["espiritosanto", "es"],
+    "goiás": ["goias", "go"],
+    "maranhão": ["maranhao", "ma"],
+    "mato grosso": ["matogrosso", "mt"],
+    "mato grosso do sul": ["matogrossodosul", "ms"],
+    "minas gerais": ["minasgerais", "mg"],
+    "pará": ["para", "pa"],
+    "paraíba": ["paraiba", "pb"],
+    "paraná": ["parana", "pr"],
+    "pernambuco": ["pernambuco", "pe"],
+    "piauí": ["piaui", "pi"],
+    "rio de janeiro": ["riodejaneiro", "rj"],
+    "rio grande do norte": ["riograndedonorte", "rn"],
+    "rio grande do sul": ["riograndedosul", "rs"],
+    "rondônia": ["rondonia", "ro"],
+    "roraima": ["roraima", "rr"],
+    "santa catarina": ["santacatarina", "sc"],
+    "são paulo": ["saopaulo", "sp"],
+    "sergipe": ["sergipe", "se"],
+    "tocantins": ["tocantins", "to"]
+    }
+    counter = 0
+    # checa se um nome valido de estado foi fornecido
+    for estado, siglas in brazilian_states.items():
+        counter+=1
+        if state_search == estado or state_search in siglas:
+            state_search = estado
+            break
+        else:            
+            if counter >= len(brazilian_states):
+                print("todo: error")
+    counter = 0
+    # checa se esse estado foi citado na biografia, caso contrário
+    # retorne o dicionario de volta
+    for values in range(len(result_dict)):
+        counter+=1
+        bio = result_dict[values]["bio"]
+        if state_search.lower() in bio.lower():
+            filtered_results.append(result_dict[values])
+        else:
+           pass
+           # OBS sem verificação se sequer existe uma menção de estado na biografia da pessoa
+    return filtered_results
 
 
