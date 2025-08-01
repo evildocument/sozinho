@@ -107,21 +107,22 @@ def escavador_scrapper(name_search, is_in_sequence=False, is_from_state=None, en
         browser.close()
         return dict_master
  
-def escavador_exhibit(dict_results, ):
+def escavador_exhibit(dict_master):
     """
         TODO: diferenciar de resultados de apenas 1 pagina e resultados filtrados (e.g nome exato)
         que só preenchem a 1 pagina (o escavador mostra primeiro os nomes mais parecidos)
     """
     final_string = ""
-    number_of_pages = len(dict_results)
-    
-    for page in range(number_of_pages):
-        print(f"Resultado da {page+1} página:\n")
-        number_of_elements = dict_results[page+1][0]
-        list_of_elements = dict_results[page+1][1]
-        for element in range(number_of_elements):
-            final_string += "\n".join(list_of_elements[element])
+    numberof_pages = len(dict_master)
+    #numberof_res_pages = 0
+    for list_of_lists in range(numberof_pages):
+        current_page = dict_master[list_of_lists+1]
+        for list_index in range(len(current_page)):
+            
+            final_string += ", \n".join(f"{key.capitalize()}: {value}" for key,value in current_page[list_index].items())
+            final_string += "\n\n"
     return final_string
+    
   
   
        
