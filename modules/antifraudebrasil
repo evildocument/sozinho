@@ -1,0 +1,38 @@
+from playwright.sync_api import sync_playwright
+import requests
+
+
+'''
+    18/08/25 - não terminado
+'''
+
+def antifraude_cpf_scrapper():
+    url = "https://antifraudebrasil.com/consultar/consulta-r.php"
+    cpf = input("cpf => ")
+    data = {
+        "email": "lol@lol.lol",
+        "placa": f"{cpf}",
+        "recaptchaResponse": "empty"
+    }
+
+    response = requests.post(url, data=data).text
+    return response.replace("nome ", "")
+
+def antifraude_name_scrapper(name):
+    url = "https://antifraudebrasil.com/nome/consultar/"
+    name = input("cpf => ")
+    data = {
+        "email": "lol@lol.lol",
+        "placa": f"{name}",
+        "recaptchaResponse": "empty"
+    }
+
+    response = requests.post(url, data=data).text
+    
+    with sync_playwright() as driver:
+        browser = driver.chromium.launch(headless=False)  
+        page = browser.new_page()
+        page.goto(url)
+        print(page.title())  
+        browser.close()
+    
