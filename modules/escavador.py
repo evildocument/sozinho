@@ -1,4 +1,5 @@
 from playwright.sync_api import sync_playwright
+import argparse
 # prototipo 1.5
 '''
     Eu sei de agora que esse código não é o mais ideal, mas tenha pena da minha pobre alma, faz um bom tempo que não programo algo
@@ -20,7 +21,26 @@ TODO:
     also, o que mais adicionar?
 '''
 
-
+def main():
+    parser = argparse.ArgumentParser(description="tudosobretodos <pesquisa>"
+                                     "opções:" 
+                                     "--in_sequence          =>      confirma que o nome está em sequência (nome e sobrenome corretos)"
+                                     "--from_state  <state>  =>      filtra o nome por resultados <desse> estado"
+                                     "--ends_with   <name>   =>      filtra por nomes terminados com <esse> sobrenome"
+                                     "--it_has_name <name>   =>      filtra por nomes que contem <esse> sobrenome"
+                                     ,
+                                    formatter_class=argparse.RawDescriptionHelpFormatter)
+        
+    parser.add_argument("name", type=str, help="Nome a ser pesquisado")
+    parser.add_argument("--in_sequence", action="store_true", help="Confirma que o nome está em sequência correta")
+    parser.add_argument("--from_state", type=str, help="Filtra a pessoa pesquisada por estado")
+    parser.add_argument("--ends_with", type=str, help="Filtra a pessoa pelo último sobrenome")
+    parser.add_argument("--has_name", type=str, help="Filtra a pessoa por um nome do meio")
+    args = parser.parse_args()
+    if args.in_sequence and args.has_name:
+        parser.error("--in_sequence já indica que o nome está em sequência correta, não faz sentido filtrar mais que isso")
+    #print(args.name, args.in_sequence, args.from_state, args.ends_with, args.has_name)
+    print(escavador_exhibit(escavador_scrapper(args.name, args.in_sequence, args.from_state, args.ends_with, args.has_name)))
 
 def escavador_parser(content):
     '''
@@ -43,32 +63,38 @@ def escavador_parser(content):
     list_of_dicts = []
     
     for each_result in range(len(result_list)):
-        result_dict = {
-        "nome": result_list[each_result][0],
-        "url": result_list[each_result][1],
-        "participacoes": result_list[each_result][3],
-        "bio": result_list[each_result][5]
-        }
-        list_of_dicts.append(result_dict)
+            result_dict = {}
+            if len(result_list[each_result]) == 6:
+                    result_dict = {
+                    "nome": result_list[each_result][0],
+                    "url": result_list[each_result][1],
+                    "participacoes": result_list[each_result][3],
+                    "bio": result_list[each_result][5]
+                    }
+                    list_of_dicts.append(result_dict)
+            else:
+                    result_dict = {
+                            "nome": result_list[each_result][0],
+                            "url": result_list[each_result][1],
+                            "bio": "\n".join(result_list[each_result][2:])
+                    }
+            list_of_dicts.append(result_dict)
     return list_of_dicts
 
 
 
 def escavador_scrapper(name_search, is_in_sequence=False, is_from_state=None, it_ends_with=None, it_has_name=None):
     """
-    ================
         Função que serve para realizar o scrapping nas 3 páginas iniciais do escavador, retornando um dicionário
         com o número de páginas como chaves, e os valoes uma lista com o primeiro index o numero de resultados
         e como segundo os valores em si.
+        SEPARADOR
+        name_search -> <nome>                   o nome a ser pesquisado
+        is_in_sequence -> <true|false>          o nome está em sequência, como é escrito
+        is_from_state -> <estado>               pesquisar por um estado especifico
+        it_ends_with -> <sobrenome>             se o nome do meio for desconhecido
+        it_has_name -> <nome|sobrenome>         um nome ou sobrenome do meio
         
-        nao tem error checking nessa bagaca xD
-        
-        name_search => o nome a ser pesquisado
-        is_in_sequence => o nome está em sequência? é exatamente esse?
-        is_from_state => pesquisar por um estado especifico
-        it_ends_with => se o nome do meio for desconhecido
-        it_has_name => um nome ou sobrenome do meio
-    ================
     """
     with sync_playwright() as driver:
         browser = driver.chromium.launch(headless=True)
@@ -94,23 +120,57 @@ def escavador_scrapper(name_search, is_in_sequence=False, is_from_state=None, it
             parsed_list = escavador_parser(div_content)
             
             # ---- checa por filtros
-            if is_in_sequence and is_from_state != None and it_ends_with != None:
-                pass
-                dict_master[current_page+1] = in_sequence(is_from_state(ends_with(parsed_list, it_ends_with), is_from_state), name_search)
-            elif is_in_sequence and is_from_state != None:
-                dict_master[current_page+1] = from_state(in_sequence(parsed_list, name_search), is_from_state)
-            elif is_from_state != None and it_ends_with != None:
-                dict_master[current_page+1] = from_state(ends_with(parsed_list, it_ends_with), is_from_state)
+            # horripilante no momento, it just werks
+            if is_in_sequence and it_has_name:
+                print("error")
+                break
+            elif is_in_sequence and is_from_state and it_ends_with:
+                dict_master[current_page+1] = in_sequence(
+                    from_state(ends_with(parsed_list, it_ends_with), is_from_state), name_search)
+                
+            elif is_in_sequence and is_from_state:
+                dict_master[current_page+1] = in_sequence(
+                    from_state(parsed_list, is_from_state),name_search)
+            
+            elif is_in_sequence and it_ends_with:
+                dict_master[current_page+1] = in_sequence(
+                    ends_with(parsed_list, it_ends_with),name_search)
+            
+            elif is_from_state and it_ends_with and it_has_name:
+                dict_master[current_page+1] = from_state(
+                    ends_with(has_name(parsed_list, it_has_name), it_ends_with), is_from_state)
+                
+            elif is_from_state and it_ends_with:
+                dict_master[current_page+1] = from_state(
+                    ends_with(parsed_list, it_ends_with), is_from_state)
+            
+            elif is_from_state and it_has_name:
+                dict_master[current_page+1] = from_state(
+                    has_name(parsed_list, it_has_name), is_from_state)
+            
+            elif it_ends_with and it_has_name:
+                dict_master[current_page+1] = ends_with(
+                    has_name(parsed_list, it_has_name), is_from_state)
+            
             else:
                 if is_in_sequence:
                     dict_master[current_page+1] = in_sequence(parsed_list, name_search)
-                if is_from_state != None:
+                    
+                elif is_from_state:
                     dict_master[current_page+1] = from_state(parsed_list, is_from_state)
-                if it_ends_with != None:
+                    
+                elif it_ends_with:
                     dict_master[current_page+1] = ends_with(parsed_list, it_ends_with)
-                if it_has_name != None:
-                    dict_master[current_page+1] = ends_with(parsed_list, it_has_name)
+                    
+                elif it_has_name:
+                    dict_master[current_page+1] = has_name(parsed_list, it_has_name)
+                    
+                else:
+                    dict_master[current_page+1] = parsed_list
+                   
         browser.close()
+        #dict_master = escavador_exhibit(dict_master)
+ 
         return dict_master
  
  
@@ -126,6 +186,7 @@ def escavador_exhibit(dict_master):
     ================
     """
     final_string = ""
+    
     numberof_pages = len(dict_master)
     #numberof_res_pages = 0
     for list_of_lists in range(numberof_pages):
@@ -146,6 +207,7 @@ def in_sequence(result_dict, name_search):
          como:  João Silva Souza, será removido do filtro)
     ================
     '''
+    
     filtered_results = []
     for values in range(len(result_dict)):
         name = result_dict[values]["nome"]
@@ -162,10 +224,11 @@ def has_name(result_dict, name_search):
         Função que serve para filtrar resultados que contenham certo nome/sobrenome entre eles
     ================
     '''
+
     filtered_results = []
     for values in range(len(result_dict)):
         name = result_dict[values]["nome"]
-        full_name = name.split()
+        full_name = map(lambda x: x.lower(), name.split())
         if name_search.lower() in full_name:
             filtered_results.append(result_dict[values])
         else:
@@ -252,3 +315,5 @@ def from_state(result_dict, state_search):
     return filtered_results
 
 
+if __name__ == "__main__":
+    main()

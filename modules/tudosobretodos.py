@@ -1,30 +1,49 @@
 import re
 import requests
+import argparse
 from bs4 import BeautifulSoup
 
 
 '''
-    TODO: seila
+    === status: 15/09/25 ====
+        - a página voltou ao ar, porém com verificação do cloudfare -
+    TODO: 
+    - verificar se a página retorna apenas um resultado ou multiplos
+        - adicionar a possibilidade de escolher entre os resultados
+    
 '''
+
+def main():
+    parser = argparse.ArgumentParser(description="tudosobretodos <pesquisa>"
+                                     "opções: --verify",
+                                    formatter_class=argparse.RawDescriptionHelpFormatter)
+        
+    parser.add_argument("pesquisa", type=str, help="Nome ou cpf a ser pesquisado")
+    parser.add_argument("--verify", action="store_true", help="Habilita verificação de 'vizinhos'")
+    args = parser.parse_args()
+    print(tst_scrap(args.pesquisa, args.verify))
+
 
 def tst_scrap(search_term, verify=False):
     '''
-    ================
+        
         Função que executa a busca, o unico resultado que realmente importa é a cidade
         
         ps: funcao por enquanto so funciona caso haja apenas um resultado para o nome,
         caso haja mais de um nome, não vai achar os elementos corretamente
-    ================
+        SEPARADOR
+        search_term -> <nome|cpf>               o termo a ser pesquisado, pode ser tanto nome quanto cpf
+        verify      -> <true|false>             verificar por vizinhos
     '''
     base_url = "https://tudosobretodos.info"
     url = f"https://tudosobretodos.info/{search_term}"
     page = requests.get(url)
+    print(page)
     if page.status_code == 200:
         soup = BeautifulSoup(page.text, "html.parser")
         
         city_bit = soup.select('.conteudoDadosDir h1')[0].get_text(strip=True)
         city = format_city(city_bit)
-        
         detalhes = soup.select('.detalhesPessoa a')
         vizinhos = []
         for i in range(len(detalhes)):
@@ -33,7 +52,6 @@ def tst_scrap(search_term, verify=False):
             else:
                 pass
         vizinhos_result = []
-        
         for vizinho in vizinhos:
             href = vizinho.get("href", "")
             full_link = base_url+href
@@ -79,7 +97,14 @@ def vizinhos_verifier(vizinhos_list, og_city):
 
 
 def format_city(city):
+    '''
+    ================
+        Filtra o resultado para apenas a cidade de onde a pessoa pesquisada é
+    ================
+    '''
     pattern = re.compile(r'(?<=, de\s)(.*?)(?=,\s*está no site)', re.IGNORECASE | re.UNICODE)
     return_city = pattern.search(city).group(1).strip()
     return return_city  
-   
+
+if __name__ == "__main__":
+    main()
