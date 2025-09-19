@@ -1,0 +1,5 @@
+argparse
+playwright
+requests
+bs4
+
