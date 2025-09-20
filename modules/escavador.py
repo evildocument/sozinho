@@ -40,7 +40,7 @@ def main():
     if args.in_sequence and args.has_name:
         parser.error("--in_sequence já indica que o nome está em sequência correta, não faz sentido filtrar mais que isso")
     #print(args.name, args.in_sequence, args.from_state, args.ends_with, args.has_name)
-    print(escavador_exhibit(escavador_scrapper(args.name, args.in_sequence, args.from_state, args.ends_with, args.has_name)))
+    print(escavador_scrapper(args.name, args.in_sequence, args.from_state, args.ends_with, args.has_name))
 
 def escavador_parser(content):
     '''
@@ -61,7 +61,6 @@ def escavador_parser(content):
     filtered_request = [filtered_request[i].split("\n") for i in range(len(filtered_request))]
     result_list = filtered_request[4:]
     list_of_dicts = []
-    
     for each_result in range(len(result_list)):
             result_dict = {}
             if len(result_list[each_result]) == 6:
@@ -71,12 +70,12 @@ def escavador_parser(content):
                     "participacoes": result_list[each_result][3],
                     "bio": result_list[each_result][5]
                     }
-                    list_of_dicts.append(result_dict)
             else:
                     result_dict = {
                             "nome": result_list[each_result][0],
                             "url": result_list[each_result][1],
                             "bio": "\n".join(result_list[each_result][2:])
+                            
                     }
             list_of_dicts.append(result_dict)
     return list_of_dicts
@@ -151,7 +150,7 @@ def escavador_scrapper(name_search, is_in_sequence=False, is_from_state=None, it
             elif it_ends_with and it_has_name:
                 dict_master[current_page+1] = ends_with(
                     has_name(parsed_list, it_has_name), is_from_state)
-            
+                
             else:
                 if is_in_sequence:
                     dict_master[current_page+1] = in_sequence(parsed_list, name_search)
@@ -169,7 +168,7 @@ def escavador_scrapper(name_search, is_in_sequence=False, is_from_state=None, it
                     dict_master[current_page+1] = parsed_list
                    
         browser.close()
-        #dict_master = escavador_exhibit(dict_master)
+        dict_master = escavador_exhibit(dict_master)
  
         return dict_master
  
@@ -230,7 +229,7 @@ def has_name(result_dict, name_search):
         name = result_dict[values]["nome"]
         full_name = map(lambda x: x.lower(), name.split())
         if name_search.lower() in full_name:
-            filtered_results.append(result_dict[values])
+            filtered_results.append(result_dict[values])     
         else:
             pass
     return filtered_results

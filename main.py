@@ -30,9 +30,8 @@ def sozinho():
             self.intro = "Digite '?' ou 'help' para a lista de comandos.\nMódulos disponiveis: Escavador, antifraudebrasil (cpf)"
         def do_run (self, arg):
             """
-                Serve para executar uma função, uma vez que os argumentos estejam saciados.
-                modo de uso: run
-                (sem argumentos)
+                Serve para executar uma função, uma vez que os argumentos estejam saciados
+                run
             """
             valid_args = False
             if self.module_selected:
@@ -52,8 +51,6 @@ def sozinho():
                     print(module_dict[self.current_module][0](*args))
                 else:
                     pass
-                        
-                
                         
                     
         def do_show(self, arg):
@@ -81,7 +78,8 @@ def sozinho():
                 print("Selecione um módulo.")
         def do_set(self, arg):
             """
-                Serve para 
+                Set(define) o(s) argumento(s) para o modulo rodar
+                set <função> <argumento>
             """
             if self.module_selected:
                 # divide o argumento em partes
@@ -101,16 +99,14 @@ def sozinho():
                     else:
                         print("Argumento não encontrado. Use show arguments.")
                 else:
-                    print("set <funcao> <argumentos>")
+                    print("set <função> <argumento>")
             else:
                 print("Selecione um modulo primeiro! <show modules>")
         def do_select(self, modulo):
             """
-            
-            """
-            '''
                 Select(seleciona) um módulo para uso
-            '''  
+                select <module>
+            """
             if modulo in module_list:
                 # reseta argumentos, define o modulo atual, indica o modulo atual no
                 # prompt, indica que no momento um modulo está selecionado,
@@ -127,6 +123,10 @@ def sozinho():
                 print("Modulo inexistente!")
         
         def do_exit(self, arg):
+            """
+                Exit(sai) do modulo atual, ou do console, caso nenhum módulo esteja selecionado.
+                exit
+            """
             if len(self.current_module) > 0:
                 self.current_module = ""
                 self.module_selected = False

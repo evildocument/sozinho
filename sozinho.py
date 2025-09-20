@@ -3,5 +3,5 @@ if __name__ == "__main__":
     from core.banner import banner
     from time import sleep
     print(banner())
-    sleep(2)
+    sleep(0.5)
     main.sozinho()
