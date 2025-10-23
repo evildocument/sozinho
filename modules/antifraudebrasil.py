@@ -62,7 +62,7 @@ def antifraude_name_scrapper(name):
     
     with sync_playwright() as driver:
         if len(name) > 8:
-            browser = driver.chromium.launch(headless=False)  
+            browser = driver.chromium.launch(headless=True)  
             page = browser.new_page()
             page.goto(url)
             #page.wait_for_load_state("networkidle")

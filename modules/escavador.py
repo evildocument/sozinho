@@ -120,6 +120,7 @@ def escavador_scrapper(name_search, is_in_sequence=False, is_from_state=None, it
             
             # ---- checa por filtros
             # horripilante no momento, it just werks
+            # TODO: lidar com possiveis erros de entrada
             if is_in_sequence and it_has_name:
                 print("error")
                 break
@@ -298,7 +299,7 @@ def from_state(result_dict, state_search):
             break
         else:            
             if counter >= len(brazilian_states):
-                print("todo: error")
+                return None
     counter = 0
     # ---- checa se esse estado foi citado na biografia, caso contrário
     # ---- retorne o dicionario de volta
