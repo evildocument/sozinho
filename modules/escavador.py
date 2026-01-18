@@ -22,14 +22,7 @@ TODO:
 '''
 
 def main():
-    parser = argparse.ArgumentParser(description="tudosobretodos <pesquisa>"
-                                     "opções:" 
-                                     "--in_sequence          =>      confirma que o nome está em sequência (nome e sobrenome corretos)"
-                                     "--from_state  <state>  =>      filtra o nome por resultados <desse> estado"
-                                     "--ends_with   <name>   =>      filtra por nomes terminados com <esse> sobrenome"
-                                     "--it_has_name <name>   =>      filtra por nomes que contem <esse> sobrenome"
-                                     ,
-                                    formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description='escavador "nome da silva" --flags\n')
         
     parser.add_argument("name", type=str, help="Nome a ser pesquisado")
     parser.add_argument("--in_sequence", action="store_true", help="Confirma que o nome está em sequência correta")
@@ -169,15 +162,17 @@ def escavador_scrapper(name_search, is_in_sequence=False, is_from_state=None, it
                     dict_master[current_page+1] = parsed_list
                    
         browser.close()
-        dict_master = escavador_exhibit(dict_master)
+        print(dict_master)
+        dict_master = _escavador_exhibit(dict_master)
  
         return dict_master
  
  
  
-def escavador_exhibit(dict_master):
+def _escavador_exhibit(dict_master):
     """
     ================
+    Função responsável por tornar a saída legível e pronta para ser lida
         TODO: diferenciar de resultados de apenas 1 pagina e resultados filtrados (e.g nome exato)
         que só preenchem a 1 pagina (o escavador mostra primeiro os nomes mais parecidos)
         

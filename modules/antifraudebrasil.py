@@ -61,56 +61,52 @@ def antifraude_name_scrapper(name):
     #response = requests.post(url, data=data).text
     
     with sync_playwright() as driver:
+        
         if len(name) > 8:
             browser = driver.chromium.launch(headless=True)  
             page = browser.new_page()
             page.goto(url)
-            #page.wait_for_load_state("networkidle")
+            
             
             page.fill("input[name='placa']", name)
             page.fill("input[name='email']", _email_generator())
             button = page.locator("button[type='submit']")
             button.click(force=True)
             
-            page.wait_for_selector(".infoCard__found", timeout=100000)
+           
 
-            # Count how many elements matched
+            # Armazena os cards de cpf e data de nascimento que retornaram,
+            # sendo esses separados pela div .infoCard_Found, primeiro arguardando esse elemento retornar
+            
+            page.wait_for_selector(".infoCard__found", timeout=100000)
+            
             cards = page.locator(".infoCard__found")
             raw_results = cards.all_inner_texts()
-            # funciona
             
+            
+            # Se o dicionário final "parsed_results" conter algum resultado:
             parsed_results = _antifraude_raw_to_dict_parser(raw_results)
-            # funciona
-            # se parsed_results tiver algum resultado
             if parsed_results:
                 dict_results = _antifraude_result_dict_parser(parsed_results)
             else:
                 browser.close()
                 return None
             browser.close()
-            final_results = ""
+            
+            final_results = []
             for dict_index in range(len(dict_results)):
-                final_results += f"CPF => {dict_results[dict_index]['cpf']}\nData de Nascimento: {dict_results[dict_index]['nascimento']}\n"
-            return f"Resultado(s) para: {name}\n{final_results}"
+                final_results.append([name.capitalize(), dict_results[dict_index]['cpf'], dict_results[dict_index]['nascimento']])
+            return final_results
         else:
             return None
-
-        #page.wait_for_selector("css=div.infofounded")
-        
-        #print(result)
-        input()
-        
-        
-        
-        #print(page.title())
-        
-        #browser.close()
+       
         
 def _antifraude_raw_to_dict_parser(raw_results):
     """
     Recebe a lista vinda de cards.all_inner_texts() e retorna
     uma lista de dicionários com cpf e nascimento.
     """
+    
     # Junta tudo em uma única string (caso haja mais de 1 container)
     if len(raw_results) > 0:
         all_text = "\n".join(raw_results)
@@ -129,6 +125,7 @@ def _antifraude_raw_to_dict_parser(raw_results):
     else:
         return None
 
+
 def _email_generator():
     """
         Gera e-mails suficientemente aleatórios para não gerarem conflito com os
@@ -140,26 +137,36 @@ def _email_generator():
 
 
 def _antifraude_result_dict_parser(parsed_results):
+    """
+        Função responsável por processar, formatar e armazenar de um dicionário para outro
+        os resultados de requisições (cpf e data de nascimento)
+    """
     current_year = datetime.now().year - 2000
     for dict_index in range(len(parsed_results)):
             updated_antifraude_date_result = ""
             nascimento_key = parsed_results[dict_index]['nascimento']
             
-            antifraude_current_year = nascimento_key[-2:]
-            antifraude_current_month = nascimento_key[4:-5]
-            antifraude_current_day = nascimento_key[:2]
+            antifraude_current_year = nascimento_key[19:21]
+            antifraude_current_month = nascimento_key[15:16]
+            antifraude_current_day = nascimento_key[11:13]
             
+            
+            # dia/
             updated_antifraude_date_result += antifraude_current_day + "/"
             
+            # dia/mes
             if antifraude_current_month == 1 or antifraude_current_month == 2:
                     updated_antifraude_date_result += f"1{antifraude_current_month} ou 0{antifraude_current_month}/"
             else:
                     updated_antifraude_date_result += f"0{antifraude_current_month}/"
+            
+            # dia/mes/ano        
             if current_year >= int(antifraude_current_year):
                     updated_antifraude_date_result += f"19{antifraude_current_year} ou 20{antifraude_current_year}"
             else:
                     updated_antifraude_date_result += f"19{antifraude_current_year}"
             
+            # Adiciona ao dicionário final "parsed_results"
             parsed_results[dict_index].update({"nascimento": updated_antifraude_date_result}) 
     return parsed_results
 

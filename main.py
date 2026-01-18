@@ -2,9 +2,13 @@ def sozinho():
     from modules.escavador import escavador_scrapper, escavador_exhibit
     import modules.tudosobretodos
     import modules.antifraudebrasil
-    import argparse
+    
     import cmd
     import inspect
+    from rich.console import Console
+    from rich.columns import Columns
+    from rich.panel import Panel
+    from rich.align import Align
     
     module_list = ["escavador", "antifraudebrasil"]
     module_dict = {"nome": {"escavador": [escavador_scrapper, inspect.signature(escavador_scrapper)], 
@@ -14,6 +18,7 @@ def sozinho():
                    "cpf": {"antifraudebrasil_cpf": [modules.antifraudebrasil.antifraude_cpf_scrapper, 
                                                     inspect.signature(modules.antifraudebrasil.antifraude_cpf_scrapper)]}
                    }
+    console = Console()
     class Sozinho(cmd.Cmd):
         def __init__(self):
             super().__init__()
@@ -22,8 +27,8 @@ def sozinho():
             self.intro = "Digite '?' ou 'help' para a lista de comandos.\nOpções de busca: nome\ncpf"
         def do_set_flag(self, arg):
             """
-                Seta as flags opcionais para as pesquisas
-                name_in_sequence => flag se o nome digitado esta na sequencia correta (evita buscas por nomes parecidos)
+                Seta as flags opcionais para as pesquisas\n
+                name_in_sequence => se o nome digitado está na sequencia correta (evita buscas por nomes parecidos)
                 state => o estado para filtragem
             """
             flag = arg
@@ -43,28 +48,49 @@ def sozinho():
                 elif current_flag == "state":
                     self.flag_dict[current_flag] = value
             else:
-                print("lol")
+                for key, value in self.flag_dict.items():
+                    print(f"{key} => {value}")
+                    
+                    
+        def _antifraude_panels(self, name):
+            antifraude_cardname_list = modules.antifraudebrasil.antifraude_name_scrapper(name)
+            mapped_items = list(map(lambda x: Panel("\n".join(x[1:]), title=x[0]), antifraude_cardname_list))
+            return mapped_items
             
-            print(self.flag_dict)
+            
         def do_nome(self, arg):
             """
                 Executa uma pesquisa de nome no nome selecionado
             """
             name = arg
+            name = name.replace('"', "").replace("'", "")
             name_parts = name.split()
+            
             if len(name_parts) > 1:
+                
                 full_name = " ".join(name_parts)
+                
+                console.print(Columns(self._antifraude_panels(full_name), align="center"))
+                
                 args = [full_name] + list(self.flag_dict.values())
-                print("Resultados do escavador:")
-                print(escavador_scrapper(*args))
-                print()
-                print(modules.antifraudebrasil.antifraude_name_scrapper(full_name))
-            else:
+                escavador_result = escavador_scrapper(*args)
+                panel = Panel.fit(
+                            escavador_result,
+                            title="Escavador",
+                        )
+                console.print(Align.center(panel, vertical="middle"))
+                
+                
+                
+            elif len(name_parts) == 1:
                 print("Aviso: você dificilmente vai conseguir um resultado preciso de volta pesquisando apenas por um nome\n")
-                print("Resultados do escavador:")
-                print(escavador_scrapper(name))
-                print()
-                print(modules.antifraudebrasil.antifraude_name_scrapper(name))
+                print(f"Resultados do escavador:\n{escavador_scrapper(name)}")
+                
+                console.print(Columns(self._antifraude_columns(full_name)))
+            else:
+                print("Use: nome <nome>")
+                
+                
         def do_exit(self, arg):
             """
                 Exit(sai) do modulo atual, ou do console, caso nenhum módulo esteja selecionado.
