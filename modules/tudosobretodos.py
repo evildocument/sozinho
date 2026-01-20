@@ -67,7 +67,6 @@ def tst_scrap(search_term, verify=False, user_url=None):
             "url": f"{base_url}/{search_term}",
             "maxTimeout": 60000
         }
-    print(user_url)
     #url = f"https://tudosobretodos.info/{search_term}"
     page = requests.post(local_url, headers=headers, json=data)
     #page = requests.get(url)
@@ -110,7 +109,15 @@ def tst_scrap(search_term, verify=False, user_url=None):
                     url = dict_list[index]['url']
                     results.append(tst_scrap(nome, False, url))
                 #console.print(results)
-                return results
+                if len(results) == 0:
+                    tst_panel_empty = Panel(
+                    "Sem Resultados",
+                    title=search_term.capitalize(),
+                    style="gold3"
+                    )
+                    return Align.center(Columns([tst_panel_empty], equal=True))
+                else:
+                    return results
                 
                 
             except:

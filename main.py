@@ -89,12 +89,21 @@ def sozinho():
                 console.print(Align.center(antifraude_panel, vertical="middle"))
 
                 # cria um painel especifico para os resultados do tudosobretodos
+                
                 tst_result = tst_scrap(full_name)
-                tst_panel = Panel.fit(
-                        tst_result,
-                        title="TudoSobreTodos",
-                    )
-                console.print(Align.center(tst_panel, vertical="middle"))
+                if type(tst_result) == list:
+                    for result in tst_result:
+                        tst_panel = Panel.fit(
+                                result,
+                                title="TudoSobreTodos",
+                            )
+                        console.print(Align.center(tst_panel, vertical="middle"))
+                else:
+                    tst_panel = Panel.fit(
+                                tst_result,
+                                title="TudoSobreTodos",
+                            )
+                    console.print(Align.center(tst_panel, vertical="middle"))
 
                 '''
                 if len(self.cpf) == 11:
