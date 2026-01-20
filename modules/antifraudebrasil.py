@@ -3,6 +3,10 @@ import requests
 import argparse
 from random import choice
 from datetime import datetime
+from rich.panel import Panel
+from rich.columns import Columns
+from rich.align import Align
+
 '''
     TODO: adicionar verificação por nome
     18/08/25 - não terminado
@@ -19,7 +23,7 @@ def main():
     args = parser.parse_args()
     if args.name is not None:
         # NOT FINISHED
-        print(antifraude_name_scrapper(args.name))
+        console.print(Align.center(antifraude_name_scrapper(args.name), vertical="middle"))
     elif args.cpf is not None:
         print(antifraude_cpf_scrapper(args.cpf))
     else:
@@ -96,11 +100,15 @@ def antifraude_name_scrapper(name):
             final_results = []
             for dict_index in range(len(dict_results)):
                 final_results.append([name.capitalize(), dict_results[dict_index]['cpf'], dict_results[dict_index]['nascimento']])
-            return final_results
+            return _antifraude_panels(final_results)
         else:
             return None
        
-        
+def _antifraude_panels(antifraude_cardname_list):
+            mapped_items = list(map(lambda x: Panel("\n".join(x[1:]), title=x[0].capitalize(), style="gold3"), antifraude_cardname_list))
+            return Align.center(Columns(mapped_items, align="center"))
+
+
 def _antifraude_raw_to_dict_parser(raw_results):
     """
     Recebe a lista vinda de cards.all_inner_texts() e retorna
@@ -171,4 +179,6 @@ def _antifraude_result_dict_parser(parsed_results):
     return parsed_results
 
 if __name__ == "__main__":
+    from rich.console import Console
+    console = Console()
     main()

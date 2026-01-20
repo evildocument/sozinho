@@ -1,5 +1,4 @@
-argparse
-playwright
-requests
-bs4
-
+beautifulsoup4==4.14.3
+playwright==1.54.0
+Requests==2.32.5
+rich==14.2.0

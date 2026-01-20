@@ -1,5 +1,10 @@
 from playwright.sync_api import sync_playwright
 import argparse
+from rich.text import Text
+from rich.console import Console
+from rich.columns import Columns
+from rich.panel import Panel
+from rich.align import Align
 # prototipo 1.5
 '''
     Eu sei de agora que esse código não é o mais ideal, mas tenha pena da minha pobre alma, faz um bom tempo que não programo algo
@@ -33,7 +38,9 @@ def main():
     if args.in_sequence and args.has_name:
         parser.error("--in_sequence já indica que o nome está em sequência correta, não faz sentido filtrar mais que isso")
     #print(args.name, args.in_sequence, args.from_state, args.ends_with, args.has_name)
-    print(escavador_scrapper(args.name, args.in_sequence, args.from_state, args.ends_with, args.has_name))
+    
+
+    console.print(escavador_scrapper(args.name, args.in_sequence, args.from_state, args.ends_with, args.has_name))
 
 def escavador_parser(content):
     '''
@@ -162,35 +169,69 @@ def escavador_scrapper(name_search, is_in_sequence=False, is_from_state=None, it
                     dict_master[current_page+1] = parsed_list
                    
         browser.close()
-        print(dict_master)
-        dict_master = _escavador_exhibit(dict_master)
+        dict_master = _escavador_exhibit(dict_master, name_search)
  
         return dict_master
  
  
  
-def _escavador_exhibit(dict_master):
+def _escavador_exhibit(dict_master, name, columns=2):
     """
     ================
     Função responsável por tornar a saída legível e pronta para ser lida
-        TODO: diferenciar de resultados de apenas 1 pagina e resultados filtrados (e.g nome exato)
-        que só preenchem a 1 pagina (o escavador mostra primeiro os nomes mais parecidos)
-        
-        tambem quero falar em qual pagina esse elemento foi encontrado, e qual elemento ele é na pagina
-        (e.g encontrado na pagina 2, é a 5 referência) algo assim
     ================
     """
-    final_string = ""
-    
+    panels = []
+
+    # quebra o nome em partes relevantes
+    name_parts = [p for p in name.lower().split() if len(p) >= 2]
     numberof_pages = len(dict_master)
-    #numberof_res_pages = 0
-    for list_of_lists in range(numberof_pages):
-        current_page = dict_master[list_of_lists+1]
-        for list_index in range(len(current_page)):
-            
-            final_string += "\n".join(f"{key.capitalize()}: {value}" for key,value in current_page[list_index].items())
-            final_string += "\n\n"
-    return final_string
+
+    # cicla entre as paginas do dicionário, cada pagina representando
+    # uma pagina real do site, sendo 3 paginas no maximo e contendo
+    # uma lista de dicionários
+    for page_index in range(1, numberof_pages + 1):
+        current_page = dict_master[page_index]
+        
+        # cicla entre os os dicionarios de cada página,
+        # [{dict1}, {dict2}, {dict3}]
+        for item_index, item in enumerate(current_page, start=1):
+            text = Text()
+
+            # cicle entre o dicionário de cada item da lista
+            # {dict1}...{dict2}
+            for key, value in item.items():
+                line = Text()
+                line.append(f"{key.capitalize()}: ", style="blue1")
+
+                value_text = Text(value)
+                lower_value = value.lower()
+
+                # highlight por token
+                for part in name_parts:
+                    start = 0
+                    while True:
+                        index = lower_value.find(part, start)
+                        if index == -1:
+                            break
+
+                        value_text.stylize("bold gold1", index, index + len(part))
+                        start = index + len(part)
+
+                line.append(value_text)
+                text.append(line)
+                text.append("\n")
+
+            panel = Panel(
+                text,
+                title=f"Página {page_index} • Resultado {item_index}",
+                border_style="gold3",
+                expand=False
+            )
+
+            panels.append(panel)
+
+    return Align.center(Columns(panels, equal=True))
     
   
        
@@ -311,4 +352,6 @@ def from_state(result_dict, state_search):
 
 
 if __name__ == "__main__":
+    
+    console = Console()
     main()
