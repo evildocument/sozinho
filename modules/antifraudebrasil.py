@@ -6,6 +6,8 @@ from datetime import datetime
 from rich.panel import Panel
 from rich.columns import Columns
 from rich.align import Align
+from bs4 import BeautifulSoup
+import json
 
 '''
     TODO: adicionar verificação por nome
@@ -22,7 +24,6 @@ def main():
 
     args = parser.parse_args()
     if args.name is not None:
-        # NOT FINISHED
         console.print(Align.center(antifraude_name_scrapper(args.name), vertical="middle"))
     elif args.cpf is not None:
         print(antifraude_cpf_scrapper(args.cpf))
@@ -53,61 +54,74 @@ def antifraude_cpf_scrapper(cpf):
         return response
 
 def antifraude_name_scrapper(name):
-    '''
-        Função de busca por nome, contem JS
-        TODO
-        TODO
-        TODO
-    '''
-    url = "https://antifraudebrasil.com/nome/"
-    
 
-    #response = requests.post(url, data=data).text
-    
-    with sync_playwright() as driver:
-        
-        if len(name) > 8:
-            browser = driver.chromium.launch(headless=True)  
-            page = browser.new_page()
-            page.goto(url)
-            
-            
-            page.fill("input[name='nome']", name)
-            page.fill("input[name='email']", _email_generator())
-            button = page.locator("button[type='submit']")
-            button.click(force=True)
-            
-           
+    url = "https://antifraudebrasil.com/nome/api/criar-consulta.php"
 
-            # Armazena os cards de cpf e data de nascimento que retornaram,
-            # sendo esses separados pela div .infoCard_Found, primeiro arguardando esse elemento retornar
-            
-            page.wait_for_selector(".cpf-item", timeout=100000)
-            
-            cards = page.locator(".cpf-item")
-            raw_results = cards.all_inner_texts()
-            
-            # Se o dicionário final "parsed_results" conter algum resultado:
-            parsed_results = _antifraude_raw_to_dict_parser(raw_results)
-            if parsed_results:
-                dict_results = _antifraude_result_dict_parser(parsed_results)
-            else:
-                browser.close()
-                return None
-            browser.close()
-            
-            final_results = []
-            for dict_index in range(len(dict_results)):
-                final_results.append([name.capitalize(), dict_results[dict_index]['cpf'], dict_results[dict_index]['nascimento']])
-            return _antifraude_panels(final_results)
-        else:
-            return None
+    data = {
+        "nome": (None, name),
+        "email": (None, _email_generator()),
+    }
+
+    response = requests.post(url, files=data, timeout=30)
+
+    texto_response = json.loads(response.text)
+    if isinstance(texto_response["success"], bool):
+        site_resposta = texto_response['redirect_url']
+        site_resposta_get = requests.get(site_resposta)
+        soup = BeautifulSoup(site_resposta_get.text, "html.parser")
+        resultados = []
+
+        for item in soup.select(".cpf-item"):
+            cpf = item.get("data-cpf-full")
+
+            nascimento = None
+            idade = None
+
+            for field in item.select(".cpf-field"):
+                label = field.find("label").get_text(strip=True)
+                value = field.find("strong").get_text(strip=True)
+
+                if label == "Nascimento:":
+                    nascimento = value
+                elif label == "Idade:":
+                    idade = value
+
+            resultados.append({
+                "cpf": cpf,
+                "nascimento": nascimento,
+                "idade": idade
+            })
+        return _antifraude_panels(name, resultados)
+    else:
+        error_panel = Panel(f"{texto_response["message"]}", 
+                                   title=name.title(), 
+                                   style="gold3")
+        return Align.center(Columns(error_panel, align="center"))  
+
        
-def _antifraude_panels(antifraude_cardname_list):
-            mapped_items = list(map(lambda x: Panel("\n".join(x[1:]), title=x[0].capitalize(), style="gold3"), antifraude_cardname_list))
-            return Align.center(Columns(mapped_items, align="center"))
+def _antifraude_panels(name, antifraude_cardname_list):
+            panels = []
+            for dictionary in antifraude_cardname_list:
+                temp_panel = Panel(f"CPF: {dictionary['cpf']}\n"
+                                   f"Nascimento: {dictionary['nascimento']}\n"
+                                   f"Idade: {dictionary['idade']}\n", 
+                                   title=name.title(), 
+                                   style="gold3")
+                panels.append(temp_panel)
+                
+            return Align.center(Columns(panels, align="center"))
 
 
+def _email_generator():
+    """
+        Gera e-mails suficientemente aleatórios para não gerarem conflito com os
+        de requisições passadas
+    """
+    chars = "abcdef123456xyz"
+    email = [choice(chars) for times in range(3)] + ["@"] + ["gmail"] + [".com"]
+    return "".join(email)
+
+''' Funções possivelmente legadas e sujeitas a remoção permanente      
 def _antifraude_raw_to_dict_parser(raw_results):
     """
     Recebe a lista vinda de cards.all_inner_texts() e retorna
@@ -133,14 +147,7 @@ def _antifraude_raw_to_dict_parser(raw_results):
         return None
 
 
-def _email_generator():
-    """
-        Gera e-mails suficientemente aleatórios para não gerarem conflito com os
-        de requisições passadas
-    """
-    chars = "abcdef123456xyz"
-    email = [choice(chars) for times in range(3)] + ["@"] + [choice(chars) for times in range(3)] + [".com"]
-    return "".join(email)
+
 
 
 def _antifraude_result_dict_parser(parsed_results):
@@ -176,7 +183,7 @@ def _antifraude_result_dict_parser(parsed_results):
             # Adiciona ao dicionário final "parsed_results"
             parsed_results[dict_index].update({"nascimento": updated_antifraude_date_result}) 
     return parsed_results
-
+'''
 if __name__ == "__main__":
     from rich.console import Console
     console = Console()

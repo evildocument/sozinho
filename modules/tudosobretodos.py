@@ -103,7 +103,7 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="ht
         # tenta selecionar o elemento indicativo de apenas um resultado
         try:
             city_bit = soup.select('.conteudoDadosDir h1')[0].get_text(strip=True)
-            print(city_bit)
+            #print(city_bit)
         # caso falhe, há mais de um resultado ou nenhum resultados
         except IndexError:
             # verifica tanto se há ou se não há resultados
