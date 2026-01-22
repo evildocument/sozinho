@@ -72,7 +72,7 @@ def antifraude_name_scrapper(name):
             page.goto(url)
             
             
-            page.fill("input[name='placa']", name)
+            page.fill("input[name='nome']", name)
             page.fill("input[name='email']", _email_generator())
             button = page.locator("button[type='submit']")
             button.click(force=True)
@@ -82,11 +82,11 @@ def antifraude_name_scrapper(name):
             # Armazena os cards de cpf e data de nascimento que retornaram,
             # sendo esses separados pela div .infoCard_Found, primeiro arguardando esse elemento retornar
             
-            page.wait_for_selector(".infoCard__found", timeout=100000)
+            page.wait_for_selector(".cpf-item", timeout=100000)
             
-            cards = page.locator(".infoCard__found")
+            cards = page.locator(".cpf-item")
             raw_results = cards.all_inner_texts()
-            
+            print(raw_results)
             
             # Se o dicionário final "parsed_results" conter algum resultado:
             parsed_results = _antifraude_raw_to_dict_parser(raw_results)
