@@ -91,7 +91,7 @@ def sozinho():
                 # cria um painel especifico para os resultados do tudosobretodos
                 
                 tst_result = tst_scrap(full_name)
-                if type(tst_result) == list:
+                if isinstance(tst_result, list):
                     for result in tst_result:
                         tst_panel = Panel.fit(
                                 result,
