@@ -86,7 +86,6 @@ def antifraude_name_scrapper(name):
             
             cards = page.locator(".cpf-item")
             raw_results = cards.all_inner_texts()
-            print(raw_results)
             
             # Se o dicionário final "parsed_results" conter algum resultado:
             parsed_results = _antifraude_raw_to_dict_parser(raw_results)

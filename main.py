@@ -10,7 +10,9 @@ def sozinho():
     from rich.columns import Columns
     from rich.panel import Panel
     from rich.align import Align
-    from rich.text import Text
+    
+    from rich.console import Group
+
     '''
     module_list = ["escavador", "antifraudebrasil"]
     module_dict = {"nome": {"escavador": [escavador_scrapper, inspect.signature(escavador_scrapper)], 
@@ -91,29 +93,20 @@ def sozinho():
                 # cria um painel especifico para os resultados do tudosobretodos
                 
                 tst_result = tst_scrap(full_name)
-                if isinstance(tst_result, list):
-                    for result in tst_result:
-                        tst_panel = Panel.fit(
-                                result,
-                                title="TudoSobreTodos",
-                            )
-                        console.print(Align.center(tst_panel, vertical="middle"))
-                else:
-                    tst_panel = Panel.fit(
-                                tst_result,
-                                title="TudoSobreTodos",
-                            )
-                    console.print(Align.center(tst_panel, vertical="middle"))
 
-                '''
-                if len(self.cpf) == 11:
-                    tst_result = tst_scrap(self.cpf)
-                    tst_panel = Panel.fit(
-                            tst_result,
-                            title="Escavador",
-                        )
-                    console.print(Align.center(tst_panel, vertical="middle"))
-                '''
+                if isinstance(tst_result, list):
+                    conteudo = Group(*tst_result)
+                else:
+                    conteudo = tst_result
+
+                tst_panel = Panel.fit(
+                    conteudo,
+                    title="TudoSobreTodos",
+                )
+
+                console.print(Align.center(tst_panel, vertical="middle"))
+
+               
                 
                 # lista de argumentos para o escavador
                 args = [full_name] + list(self.flag_dict.values())

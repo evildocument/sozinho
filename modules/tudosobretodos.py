@@ -106,7 +106,6 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="ht
             print(city_bit)
         # caso falhe, há mais de um resultado ou nenhum resultados
         except IndexError:
-            print("index error")
             # verifica tanto se há ou se não há resultados
             try:
                 # elemento apenas disponivel quando não se há resultados
