@@ -2,7 +2,6 @@ def sozinho():
     from modules.escavador import escavador_scrapper
     from modules.tudosobretodos import tst_scrap
     from modules.antifraudebrasil import antifraude_name_scrapper
-    #import modules.antifraudebrasil
     
     import cmd
     import inspect
@@ -30,7 +29,7 @@ def sozinho():
             self.flag_dict = {"escavador": {"name_in_sequence": False, "state": None}}
             self.cpf = False
             self.prompt = "> "
-            self.intro = "Digite '?' ou 'help' para a lista de comandos.\nOpções de busca:\nnome\ncpf"
+            #self.intro = "Digite '?' ou 'help' para a lista de comandos.\nOpções de busca:\nnome"
         def do_set_flag(self, arg):
             """
                 Seta as flags opcionais para as pesquisas\n

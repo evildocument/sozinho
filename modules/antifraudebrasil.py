@@ -1,4 +1,3 @@
-from playwright.sync_api import sync_playwright
 import requests
 import argparse
 from random import choice
@@ -8,7 +7,6 @@ from rich.columns import Columns
 from rich.align import Align
 from bs4 import BeautifulSoup
 import json
-
 '''
     TODO: adicionar verificação por nome
     18/08/25 - não terminado

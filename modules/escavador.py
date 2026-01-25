@@ -202,7 +202,7 @@ def _escavador_exhibit(dict_master, name, columns=2):
             # {dict1}...{dict2}
             for key, value in item.items():
                 line = Text()
-                line.append(f"{key.capitalize()}: ", style="blue1")
+                line.append(f"{key.title()}: ", style="blue1")
 
                 value_text = Text(value)
                 lower_value = value.lower()

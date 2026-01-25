@@ -17,17 +17,17 @@ import traceback
 '''
 
 def main():
-    parser = argparse.ArgumentParser(description="tudosobretodos <pesquisa>"
-                                     "opções: --verify",
+    parser = argparse.ArgumentParser(description="tudosobretodos <pesquisa> --flags",
                                     formatter_class=argparse.RawDescriptionHelpFormatter)
         
     parser.add_argument("pesquisa", type=str, help="Nome ou cpf a ser pesquisado")
     parser.add_argument("--verify", action="store_true", help="Habilita verificação de 'vizinhos'")
+    parser.add_argument("--flareproxy", type=str, default="http://localhost:8191/v1", help="A url:porta para a instância do flaresolverr,\n por padrão em http://localhost:8191/v1.")
     args = parser.parse_args()
     
     # se o resultado retornado for uma lista, entao trata-se de multiplos resultados
     # caso contrário, trata-se apenas de um painel
-    scrap_result = tst_scrap(args.pesquisa, args.verify)
+    scrap_result = tst_scrap(args.pesquisa, args.verify, None, None, args.flareproxy)
     if isinstance(scrap_result, list):
         for result in scrap_result:  
          console.print(result)     
@@ -60,9 +60,9 @@ def _tst_ehxibit(name, result):
         )
         return Align.center(Columns([tst_panel], equal=True))
 
-def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="http://localhost:8191/v1", rate_limit=5, display_limit=15):
+def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="http://localhost:8191/v1", rate_limit=5, display_limit=15):
     '''
-        
+    =================    
         Função que executa a busca, o unico resultado que realmente importa é a cidade
         
         ps: funcao por enquanto so funciona caso haja apenas um resultado para o nome,
@@ -77,6 +77,7 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="ht
                              
         display_limit -> refere-se ao limite de resultados mostrados na tela, sendo o valor padrão 5. Se 20 resultados retornarem,
                       apenas 15 serão exibidos na tela, os outros 5 seram omitidos.
+    =================                  
     '''
     
     base_url = "https://tudosobretodos.info"
@@ -95,7 +96,29 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="ht
             "url": f"{base_url}/{search_term}",
             "maxTimeout": 60000
         }
-    page = requests.post(local_url, headers=headers, json=data)
+    try:
+        page = requests.post(proxy_url, headers=headers, json=data)
+    except requests.exceptions.ConnectionError:
+        tst_proxy_failure = Panel(
+        Align.center(
+            """Para utilizar esse módulo é necessário
+        ter uma instância proxy do FlareSolverr rodando,\n
+        rode-o como composer no endereço e porta padrão(localmente - http://localhost:8191/v1)
+        ou
+        configure-o e aponte a ele usando a flag:
+
+        --flareproxy""",
+                vertical="middle"
+            ),
+            title="Proxy não configurado",
+            style="red"
+        )
+
+        return Align.center(
+            Columns([tst_proxy_failure], equal=True),
+            vertical="middle"
+        )
+        
     if page.status_code == 200:
         data = page.json()  
         html = data["solution"]["response"]
@@ -116,7 +139,7 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="ht
                 if not no_result == []:
                     tst_panel_failure = Panel(
                         "Sem resultados",
-                        title=search_term.capitalize(),
+                        title=search_term.title(),
                         style="gold3"
                     )
                     
@@ -130,10 +153,11 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="ht
                 if quantidade_resultados == 0:
                     tst_panel_empty = Panel(
                     "Sem Resultados",
-                    title=search_term.capitalize(),
+                    title=search_term.title(),
                     style="gold3"
                     )
                     return Align.center(Columns([tst_panel_empty], equal=True))
+                
                 
                 # caso esteja populada, há resultados; porém devem estar abaixo do rate_limit
                 elif quantidade_resultados <= rate_limit and quantidade_resultados > 0:
@@ -145,6 +169,8 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="ht
                         # com os paineis que ela retorna + o ano
                         results.append(tst_scrap(nome, verify, url, ano))
                     return results
+                
+                
                 # caso a quantidade de resultados superar o limite de busca, porém não o de display
                 elif quantidade_resultados > rate_limit and quantidade_resultados < display_limit:
                     multiplos_resultados = []
@@ -156,11 +182,13 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="ht
                         temp_panel =  Panel(
                                         f"Estado: {item_atual['estado']}\n"
                                         f"Nascimento: {item_atual['ano']}",
-                                        title=item_atual['nome'].capitalize(),
+                                        title=item_atual['nome'].title(),
                                         style="gold3"
                                         )
                         multiplos_resultados.append(Align.center(Columns([temp_panel], equal=True)))
                     return multiplos_resultados
+                
+                
                 # caso até o limite de display seja superado
                 else:
                     multiplos_resultados = []
@@ -172,7 +200,7 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="ht
                         temp_panel =  Panel(
                                         f"Estado: {item_atual['estado']}\n"
                                         f"Nascimento: {item_atual['ano']}",
-                                        title=item_atual['nome'].capitalize(),
+                                        title=item_atual['nome'].title(),
                                         style="gold3"
                                         )
                         multiplos_resultados.append(Align.center(Columns([temp_panel], equal=True)))
@@ -184,10 +212,10 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="ht
                     
             # nenhum resultado/erro
             except Exception as error:
-                print(traceback.format_exc())
+                # print(traceback.format_exc())
                 tst_panel_failure = Panel(
                     "Ocorreu algum erro com a requisição,\npor favor tente novamente",
-                    title=search_term.capitalize(),
+                    title=search_term.title(),
                     style="gold3"
                 )
                 
@@ -212,13 +240,6 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, local_url="ht
         if verify:
             vizinhos_result = vizinhos_verifier(vizinhos_result, city)
             return _tst_ehxibit(search_term, [city, vizinhos_result, year])
-            """
-            return_panel = Panel()
-            return Align.center(
-            _tst_ehxibit(search_term, [city, vizinhos_result]),
-            vertical="middle"
-            )
-            """
         else:
             return _tst_ehxibit(search_term, [city, vizinhos_result, year])
     else:
