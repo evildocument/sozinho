@@ -52,7 +52,7 @@ def _tst_ehxibit(name, result):
         title=name,
         style="gold3"
         )
-        return Align.center(Columns([tst_panel], equal=True))
+        return Align.center(tst_panel)
     else:
         tst_panel = Panel(
             f"Cidade: {result[0]}\n"
@@ -60,7 +60,7 @@ def _tst_ehxibit(name, result):
             title=name,
             style="gold3"
         )
-        return Align.center(Columns([tst_panel], equal=True))
+        return Align.center(tst_panel)
 
 def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="http://localhost:8191/v1", state_verify=None, rate_limit=3, display_limit=15):
     '''
@@ -186,8 +186,8 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="ht
                                         title=item_atual['nome'].title(),
                                         style="gold3"
                                         )
-                        multiplos_resultados.append(Align.center(Columns([temp_panel], equal=True)))
-                    return multiplos_resultados
+                        multiplos_resultados.append(temp_panel)
+                    return Align.center(Columns(multiplos_resultados, equal=True, expand=True))
                 
                 
                 # caso até o limite de display seja superado
@@ -208,10 +208,10 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="ht
                                             title=item_atual['nome'].title(),
                                             style="gold3"
                                             )
-                            multiplos_resultados.append(Align.center(Columns([temp_panel], equal=True)))
+                            multiplos_resultados.append(temp_panel)
                         resto_resultados = quantidade_resultados - display_limit
                         multiplos_resultados.append(Align.center(f"E mais {resto_resultados} resultados...\n", vertical="middle", style="gold3"))
-                        return multiplos_resultados
+                        return Align.center(Columns(multiplos_resultados, equal=True, expand=True))
                     
                     
                     
@@ -289,12 +289,12 @@ def _verify_state(city_string, state_search):
                                 title=item_atual['nome'].title(),
                                 style="gold3"
                                 )
-                new_results.append(Align.center(Columns([temp_panel], equal=True)))
+                new_results.append(temp_panel)
             # resto_resultados = quantidade_resultados - display_limit
             #multiplos_resultados.append(Align.center(f"E mais {resto_resultados} resultados...\n", vertical="middle", style="gold3"))
             else:
                 pass
-        return new_results
+        return Align.center(Columns(new_results, equal=True, expand=True))
             
     
 def _get_vizinhos(soup):
