@@ -1,6 +1,7 @@
 import re
 import requests
 import argparse
+from core.states import brazilian_states as BRAZILLIAN_STATES
 from bs4 import BeautifulSoup
 from rich.panel import Panel
 from rich.columns import Columns
@@ -23,11 +24,12 @@ def main():
     parser.add_argument("pesquisa", type=str, help="Nome ou cpf a ser pesquisado")
     parser.add_argument("--verify", action="store_true", help="Habilita verificação de 'vizinhos'")
     parser.add_argument("--flareproxy", type=str, default="http://localhost:8191/v1", help="A url:porta para a instância do flaresolverr,\n por padrão em http://localhost:8191/v1.")
+    parser.add_argument("--state", type=str, help="Filtrar resultados por estado")
     args = parser.parse_args()
     
     # se o resultado retornado for uma lista, entao trata-se de multiplos resultados
     # caso contrário, trata-se apenas de um painel
-    scrap_result = tst_scrap(args.pesquisa, args.verify, None, None, args.flareproxy)
+    scrap_result = tst_scrap(args.pesquisa, args.verify, None, None, args.flareproxy, args.state)
     if isinstance(scrap_result, list):
         for result in scrap_result:  
          console.print(result)     
@@ -60,7 +62,7 @@ def _tst_ehxibit(name, result):
         )
         return Align.center(Columns([tst_panel], equal=True))
 
-def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="http://localhost:8191/v1", rate_limit=5, display_limit=15):
+def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="http://localhost:8191/v1", state_verify=None, rate_limit=3, display_limit=15):
     '''
     =================    
         Função que executa a busca, o unico resultado que realmente importa é a cidade
@@ -126,7 +128,6 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="ht
         # tenta selecionar o elemento indicativo de apenas um resultado
         try:
             city_bit = soup.select('.conteudoDadosDir h1')[0].get_text(strip=True)
-            #print(city_bit)
         # caso falhe, há mais de um resultado ou nenhum resultados
         except IndexError:
             # verifica tanto se há ou se não há resultados
@@ -167,7 +168,7 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="ht
                         ano = dict_list[index]['ano']
                         # chama a propria função, tst_scrap, formando uma lista
                         # com os paineis que ela retorna + o ano
-                        results.append(tst_scrap(nome, verify, url, ano))
+                        results.append(tst_scrap(nome, verify, url, ano, proxy_url, state_verify))
                     return results
                 
                 
@@ -191,22 +192,26 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="ht
                 
                 # caso até o limite de display seja superado
                 else:
-                    multiplos_resultados = []
-                    multiplos_resultados.append(Align.center(
-                        f"Resultados({quantidade_resultados}) superam o limite de display (atualmente {display_limit}\nE seram resumidos até o limite.\n"
-                        , vertical="middle", style="gold3"))
-                    for index in range(display_limit):
-                        item_atual = dict_list[index]
-                        temp_panel =  Panel(
-                                        f"Estado: {item_atual['estado']}\n"
-                                        f"Nascimento: {item_atual['ano']}",
-                                        title=item_atual['nome'].title(),
-                                        style="gold3"
-                                        )
-                        multiplos_resultados.append(Align.center(Columns([temp_panel], equal=True)))
-                    resto_resultados = quantidade_resultados - display_limit
-                    multiplos_resultados.append(Align.center(f"E mais {resto_resultados} resultados...\n", vertical="middle", style="gold3"))
-                    return multiplos_resultados
+                    if state_verify:
+                        multiplos_resultados = _verify_state(dict_list, state_verify)
+                        return multiplos_resultados
+                    else:
+                        multiplos_resultados = []
+                        multiplos_resultados.append(Align.center(
+                            f"Resultados({quantidade_resultados}) superam o limite de display (atualmente {display_limit}\nE seram resumidos até o limite.\n"
+                            , vertical="middle", style="gold3"))
+                        for index in range(display_limit):
+                            item_atual = dict_list[index]
+                            temp_panel =  Panel(
+                                            f"Estado: {item_atual['estado']}\n"
+                                            f"Nascimento: {item_atual['ano']}",
+                                            title=item_atual['nome'].title(),
+                                            style="gold3"
+                                            )
+                            multiplos_resultados.append(Align.center(Columns([temp_panel], equal=True)))
+                        resto_resultados = quantidade_resultados - display_limit
+                        multiplos_resultados.append(Align.center(f"E mais {resto_resultados} resultados...\n", vertical="middle", style="gold3"))
+                        return multiplos_resultados
                     
                     
                     
@@ -220,34 +225,102 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="ht
                 )
                 
                 return Align.center(Columns([tst_panel_failure], equal=True))
-        
+        # CIDADE / ESTADO
         city = format_city(city_bit)
-        detalhes = soup.select('.detalhesPessoa a')
-        vizinhos = []
-        for i in range(len(detalhes)):
-            if "linkLogue" not in str(detalhes[i]):
-                vizinhos.append(detalhes[i])
-            else:
-                pass
-        vizinhos_result = []
-        for vizinho in vizinhos:
-            href = vizinho.get("href", "")
-            full_link = base_url+href
-            name_div = vizinho.find("div", class_="itemMoradores")
-            name = name_div.get_text(strip=True) if name_div else ""
-            vizinhos_result.append({"nome": name, "link": full_link})
         
-        if verify:
-            vizinhos_result = vizinhos_verifier(vizinhos_result, city)
-            return _tst_ehxibit(search_term, [city, vizinhos_result, year])
-        else:
-            return _tst_ehxibit(search_term, [city, vizinhos_result, year])
+        # se for selecinado a filtragem de estado
+        if state_verify:
+            verify_state_result = _verify_state(city, state_verify)
+            if verify_state_result:
+                city = verify_state_result
+            else:
+                city = None
+        if city:
+            if verify:
+                vizinhos_result = _get_vizinhos(soup)
+                vizinhos_result = _vizinhos_verifier(vizinhos_result, city)
+                return _tst_ehxibit(search_term, [city, vizinhos_result, year])
+            else:
+                return _tst_ehxibit(search_term, [city, [], year])
     else:
         print("todo error")
 
+def _verify_state(city_string, state_search):
+    """
+        Função responsável por filtrar os estados, tanto quanto converter nome de estados simples
+        para completos.
+        e.g BA para Bahia, RS para Rio Grande do Sul
+        e também lidar com lista de dicionarios, além de strings
+        
+        TODO: quebrar essa função e diminuir essa bagunça e codigo duplicado
+    """
+    counter = 0
+    # ---- checa se um nome valido de estado foi fornecido
+    for estado, siglas in BRAZILLIAN_STATES.items():
+        counter+=1
+        
+        if state_search == estado or state_search in siglas:
+            state_search = estado
+            break
+        else:            
+            if counter >= len(BRAZILLIAN_STATES):
+                return None
+    lista_com_sigla = BRAZILLIAN_STATES.get(state_search)
+    if isinstance(city_string, str):
+        cidade_resultado = city_string[:-5]
+        estado_resultado = city_string[-2:].lower()
+        
+        # transforma a sigla em um nome completo
+        # Sousa / PB => Sousa - Paraíba
+        if estado_resultado in lista_com_sigla:
+            cidade_resultado = f"{cidade_resultado.capitalize()} / {state_search.capitalize()}"
+            return cidade_resultado
+        else:
+            return None
+    else:
+        new_results = []
+        for index in range(len(city_string)):
+            item_atual = city_string[index]
+            if item_atual['estado'].lower() in lista_com_sigla:
+                item_atual['estado'] = state_search
+                temp_panel =  Panel(
+                                f"Estado: {item_atual['estado'].capitalize()}\n"
+                                f"Nascimento: {item_atual['ano']}",
+                                title=item_atual['nome'].title(),
+                                style="gold3"
+                                )
+                new_results.append(Align.center(Columns([temp_panel], equal=True)))
+            # resto_resultados = quantidade_resultados - display_limit
+            #multiplos_resultados.append(Align.center(f"E mais {resto_resultados} resultados...\n", vertical="middle", style="gold3"))
+            else:
+                pass
+        return new_results
+            
+    
+def _get_vizinhos(soup):
+    """
+    ===================
+        Função responsável por processar a classe que mostra os 'vizinhos'/ pessoas da mesma cidade
+    ===================
+    """
+    detalhes = soup.select('.detalhesPessoa a')
+    vizinhos = []
+    for i in range(len(detalhes)):
+        if "linkLogue" not in str(detalhes[i]):
+            vizinhos.append(detalhes[i])
+        else:
+            pass
+    vizinhos_result = []
+    for vizinho in vizinhos:
+        href = vizinho.get("href", "")
+        full_link = "https://tudosobretodos.info/"+href
+        name_div = vizinho.find("div", class_="itemMoradores")
+        name = name_div.get_text(strip=True) if name_div else ""
+        vizinhos_result.append({"nome": name, "link": full_link})
+    return vizinhos_result
 
 
-def vizinhos_verifier(vizinhos_list, og_city):
+def _vizinhos_verifier(vizinhos_list, og_city):
     '''
     ================
         Função que serve para verificar se os "vizinhos" são da mesma cidade;

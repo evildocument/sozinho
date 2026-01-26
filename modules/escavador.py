@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
 import argparse
+from core.states import brazilian_states as BRAZILLIAN_STATES
 from rich.text import Text
 from rich.console import Console
 from rich.columns import Columns
@@ -295,46 +296,17 @@ def from_state(result_dict, state_search):
     ================
     '''
     filtered_results = []
-    brazilian_states = {
-    "acre": ["acre", "ac"],
-    "alagoas": ["alagoas", "al"],
-    "amapá": ["amapa", "ap"],
-    "amazonas": ["amazonas", "am"],
-    "bahia": ["bahia", "ba"],
-    "ceará": ["ceara", "ce"],
-    "distrito federal": ["distritofederal", "df"],
-    "espírito santo": ["espiritosanto", "es"],
-    "goiás": ["goias", "go"],
-    "maranhão": ["maranhao", "ma"],
-    "mato grosso": ["matogrosso", "mt"],
-    "mato grosso do sul": ["matogrossodosul", "ms"],
-    "minas gerais": ["minasgerais", "mg"],
-    "pará": ["para", "pa"],
-    "paraíba": ["paraiba", "pb"],
-    "paraná": ["parana", "pr"],
-    "pernambuco": ["pernambuco", "pe"],
-    "piauí": ["piaui", "pi"],
-    "rio de janeiro": ["riodejaneiro", "rj"],
-    "rio grande do norte": ["riograndedonorte", "rn"],
-    "rio grande do sul": ["riograndedosul", "rs"],
-    "rondônia": ["rondonia", "ro"],
-    "roraima": ["roraima", "rr"],
-    "santa catarina": ["santacatarina", "sc"],
-    "são paulo": ["saopaulo", "sp"],
-    "sergipe": ["sergipe", "se"],
-    "tocantins": ["tocantins", "to"]
-    }
     
     
     counter = 0
     # ---- checa se um nome valido de estado foi fornecido
-    for estado, siglas in brazilian_states.items():
+    for estado, siglas in BRAZILLIAN_STATES.items():
         counter+=1
         if state_search == estado or state_search in siglas:
             state_search = estado
             break
         else:            
-            if counter >= len(brazilian_states):
+            if counter >= len(BRAZILLIAN_STATES):
                 return None
     counter = 0
     # ---- checa se esse estado foi citado na biografia, caso contrário

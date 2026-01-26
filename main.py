@@ -62,12 +62,6 @@ def sozinho():
                 for key, value in self.flag_dict.items():
                     print(f"{key} => {value}")
                     
-                    
-        """def _antifraude_panels(self, name):
-            antifraude_cardname_list = modules.antifraudebrasil.antifraude_name_scrapper(name)
-            mapped_items = list(map(lambda x: Panel("\n".join(x[1:]), title=x[0], style="gold3"), antifraude_cardname_list))
-            return mapped_items
-        """  
             
         def do_nome(self, arg):
             """
@@ -120,10 +114,7 @@ def sozinho():
                 
                 
             elif len(name_parts) == 1:
-                print("Aviso: você dificilmente vai conseguir um resultado preciso de volta pesquisando apenas por um nome\n")
-                print(f"Resultados do escavador:\n{escavador_scrapper(name)}")
-                
-                console.print(Columns(self._antifraude_columns(full_name)))
+                console.print(Align.center("[red]É necessário um nome e sobrenome![/]\n"))
             else:
                 print("Use: nome <nome>")
                 
