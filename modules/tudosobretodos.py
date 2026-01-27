@@ -242,6 +242,8 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="ht
                 return _tst_ehxibit(search_term, [city, vizinhos_result, year])
             else:
                 return _tst_ehxibit(search_term, [city, [], year])
+        else:
+            return ""
     else:
         print("todo error")
 

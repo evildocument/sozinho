@@ -26,7 +26,8 @@ def sozinho():
     class Sozinho(cmd.Cmd):
         def __init__(self):
             super().__init__()
-            self.flag_dict = {"escavador": {"name_in_sequence": False, "state": None}}
+            self.flag_dict = {"escavador": {"name_in_sequence": False, "state": None}, 
+                              "tudosobretodos": {"verify": False,  "url": None, "year": None, "proxy_url": "http://localhost:8191/v1", "state": None, "rate_limit": 3, "display_limit":15} }
             self.cpf = False
             self.prompt = "> "
             #self.intro = "Digite '?' ou 'help' para a lista de comandos.\nOpções de busca:\nnome"
@@ -43,26 +44,25 @@ def sozinho():
             elif len(flags) == 2:
                 current_flag = flags[0].lower()
                 value = flags[1].lower()
+                
                 if current_flag == "name_in_sequence":
                     if value == "true":
-                        self.flag_dict[current_flag] = True
+                        self.flag_dict["escavador"][current_flag] = True
                     elif value == "false":
-                        self.flag_dict[current_flag] = False
+                        self.flag_dict["escavador"][current_flag] = False
                     else:
                         print("Use: set_flag <flag> true|false")
                 elif current_flag == "state":
-                    self.flag_dict[current_flag] = value
-                '''
-                elif current_flag == "cpf":
-                    if len(value) == 11:
-                        self.cpf = value
-                '''
+                    self.flag_dict["escavador"][current_flag] = value
+                    self.flag_dict["tudosobretodos"][current_flag] = value
                 
             else:
                 for key, value in self.flag_dict.items():
                     print(f"{key} => {value}")
-                    
-            
+        def do_test(self, arg):
+            args = list(self.flag_dict["escavador"].values())            
+            print(args)
+
         def do_nome(self, arg):
             """
                 Executa uma pesquisa de nome no nome selecionado
@@ -84,8 +84,8 @@ def sozinho():
                 console.print(Align.center(antifraude_panel, vertical="middle"))
 
                 # cria um painel especifico para os resultados do tudosobretodos
-                
-                tst_result = tst_scrap(full_name)
+                tst_arguments = [full_name] + list(self.flag_dict["tudosobretodos"].values())
+                tst_result = tst_scrap(*tst_arguments)
 
                 if isinstance(tst_result, list):
                     conteudo = Group(*tst_result)
@@ -102,8 +102,8 @@ def sozinho():
                
                 
                 # lista de argumentos para o escavador
-                args = [full_name] + list(self.flag_dict.values())
-                escavador_result = escavador_scrapper(*args)
+                args_escavador = [full_name] + list(self.flag_dict["escavador"].values())
+                escavador_result = escavador_scrapper(*args_escavador)
                 # cria um painel especifico para o escavador
                 escavador_panel = Panel.fit(
                             escavador_result,
