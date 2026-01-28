@@ -1,10 +1,14 @@
 import shutil
 
+"""
+================
+Modulo de suporte, responsavel por imprimir o banner
+================
+"""
 
 def banner():
-    width = shutil.get_terminal_size().columns
-    banner_center = ""
-    banner_string = """
+    banner_string = """[bold gold3]
+    
     \n
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣤⠤⠤⠤⠤⠤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣢⠖⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -21,17 +25,15 @@ def banner():
 ⢶⣂⠁⠹⣇⠀⠀⢦⡤⢿⣀⠀⠀⠈⠙⠒⠒⠚⠁⠀⠀⠀⠀⠀⠑⠒⠲⠶⠚⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⡟⠀⠉⠀⠈⠉⠀⠀⢠⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠠⠮⠔⠂⠀⠀⠀⠀⠀⡰⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+    [/]
     """
-    for line in banner_string.splitlines():
-        banner_center += line.center(width)
-    banner_center2 = ""
-    banner_string2 = """
+
+    banner_string2 = """[bold blue]
     .▄▄ ·       ·▄▄▄▄•▪   ▐ ▄  ▄ .▄      
 ▐█ ▀. ▪     ▪▀·.█▌██ •█▌▐███▪▐█▪     
 ▄▀▀▀█▄ ▄█▀▄ ▄█▀▀▀•▐█·▐█▐▐▌██▀▐█ ▄█▀▄ 
 ▐█▄▪▐█▐█▌.▐▌█▌▪▄█▀▐█▌██▐█▌██▌▐▀▐█▌.▐▌
  ▀▀▀▀  ▀█▄▀▪·▀▀▀ •▀▀▀▀▀ █▪▀▀▀ · ▀█▄▀▪
+ [/]
     """
-    for line in banner_string2.splitlines():
-        banner_center2 += line.center(width)
-    return f"{banner_center}\n{banner_center2}"
+    return f"{banner_string}{banner_string2}"

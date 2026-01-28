@@ -7,10 +7,14 @@ from rich.columns import Columns
 from rich.align import Align
 from bs4 import BeautifulSoup
 import json
+
 '''
-    TODO: adicionar verificação por nome
-    18/08/25 - não terminado
+================
+    AntiFraudeBrasil
+================
 '''
+
+
 def main():
     parser = argparse.ArgumentParser(description="antifraudebrasil --name <nome>\n"
                                     "antifraudebrasil --cpf <cpf>",
@@ -32,9 +36,11 @@ def main():
 def antifraude_cpf_scrapper(cpf):
     """
     ================
+        Não ligado ao modulo principal, ainda
+        28/01/26
         Função de busca por CPF, retornando nome completo.
-        SEPARADOR
-        cpf -> <cpf>                o cpf a ser pesquisado
+        
+            • cpf -> <cpf>                o cpf a ser pesquisado
     ================
     """
     url = "https://antifraudebrasil.com/consultar/consulta-r.php"
@@ -119,7 +125,12 @@ def _email_generator():
     email = [choice(chars) for times in range(3)] + ["@"] + ["gmail"] + [".com"]
     return "".join(email)
 
-''' Funções possivelmente legadas e sujeitas a remoção permanente      
+''' 
+================
+Funções possivelmente legadas e sujeitas a remoção permanente      
+
+21/01/26 - depois resolvo isso
+================
 def _antifraude_raw_to_dict_parser(raw_results):
     """
     Recebe a lista vinda de cards.all_inner_texts() e retorna

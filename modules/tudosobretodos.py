@@ -9,12 +9,9 @@ from rich.align import Align
 import traceback
 
 '''
-    === status: 15/09/25 ====
-        - a página voltou ao ar, porém com verificação do cloudfare -
-    TODO: 
-    - verificar se a página retorna apenas um resultado ou multiplos
-        - adicionar a possibilidade de escolher entre os resultados
-    
+    ================
+    TUDOSOBREmTODOS
+    ================
 '''
 
 def main():
@@ -37,12 +34,13 @@ def main():
         console.print(scrap_result)
 def _tst_ehxibit(name, result):
     """
-    =======
-        Função responsável por formatar e exibir de forma legivel os argumentos
-    =======
+    ================
+        Função responsável por formatar e exibir de forma legivel os argumentos da funcao principal
+        tst_scrap
+    ================
     """
-    # a unica forma de se ter um ano de nascimento na requisição é
-    # se há multiplos resultados, caso contrário o valor é None
+    # ----- a unica forma de ano_nascimento[2] não ser None é se houver
+    # ----- multiplos resultados
     ano_nascimento = result[2]
     if ano_nascimento:
         tst_panel = Panel(
@@ -72,7 +70,7 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="ht
         SEPARADOR
         search_term -> <nome|cpf>               o termo a ser pesquisado, pode ser tanto nome quanto cpf
         verify      -> <true|false>             verificar por vizinhos
-        
+        proxy_url   -> url:porta do flaresolverr
         rate_limit -> refere-se ao limite de downloads de pagina, sendo o valor padrão 5. Ou seja, se até 5 resultados
                       for retornado, essas 5 páginas seram baixadas. 
                       
@@ -84,8 +82,8 @@ def tst_scrap(search_term, verify=False, user_url=None, year=None, proxy_url="ht
     
     base_url = "https://tudosobretodos.info"
     headers = {"Content-Type": "application/json"}
-    # essa verificação serve de suporte para a recursão nessa função,
-    # fazendo requisições para cada resultado/URL achado (dependendo do rate_limit)
+    # ----- essa verificação serve de suporte para a recursão nessa função,
+    # ----- fazendo requisições para cada resultado/URL achado (dependendo do rate_limit)
     if user_url:
          data = {
         "cmd": "request.get",

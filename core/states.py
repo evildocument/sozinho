@@ -1,3 +1,10 @@
+"""
+================
+Modulo de suporte, responsavel por um dicionario de listas de estados
+================
+"""
+
+
 brazilian_states = {
     "acre": ["acre", "ac"],
     "alagoas": ["alagoas", "al"],
