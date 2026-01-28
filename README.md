@@ -71,6 +71,8 @@ Argumentos
 - ou, caso preferir, diretamente pela linha de comando
 ```
 $ python3 -m modules.escavador --help
+
 ```
-<p align="center"><img src="assets/tool_4.png"></p><hr>
+
+
 
