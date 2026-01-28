@@ -9,7 +9,7 @@ def sozinho():
     from rich.columns import Columns
     from rich.panel import Panel
     from rich.align import Align
-    
+    from rich.tree import Tree
     from rich.console import Group
 
     '''
@@ -44,21 +44,27 @@ def sozinho():
             elif len(flags) == 2:
                 current_flag = flags[0].lower()
                 value = flags[1].lower()
-                
+                # escavador
                 if current_flag == "name_in_sequence":
                     if value == "true":
                         self.flag_dict["escavador"][current_flag] = True
                     elif value == "false":
                         self.flag_dict["escavador"][current_flag] = False
                     else:
-                        print("Use: set_flag <flag> true|false")
+                        console.print("[red3]Use: set_flag name_in_sequence true|false[/]")
                 elif current_flag == "state":
                     self.flag_dict["escavador"][current_flag] = value
                     self.flag_dict["tudosobretodos"][current_flag] = value
-                
+                elif current_flag == "verify":
+                    if value == "true":
+                        self.flag_dict["tudosobretodos"][current_flag] = True
+                    elif value == "false":
+                        self.flag_dict["tudosobretodos"][current_flag] = False
+                    else:
+                        console.print("[red3]Use: set_flag verify true|false[/]")
             else:
-                for key, value in self.flag_dict.items():
-                    print(f"{key} => {value}")
+                tree = self.dict_to_tree(self.flag_dict)
+                console.print(tree)
         def do_test(self, arg):
             args = list(self.flag_dict["escavador"].values())            
             print(args)
@@ -125,6 +131,30 @@ def sozinho():
                 exit
             """
             return True
+        
+        def dict_to_tree(self, data: dict, root_name="Argumentos"):
+            tree = Tree(root_name)
+            def format_value(value):
+                if value is None:
+                    return "[dim]None[/]"
+                if isinstance(value, bool):
+                    if value == False:
+                        return f"[red]{value}[/]"
+                    else:
+                        return f"[green]{value}[/]"
+                if isinstance(value, int):
+                    return f"[blue]{value}[/]"
+                return f"[cyan]{value}[/]"
+            def add_branch(branch, obj):
+                for key, value in obj.items():
+                    if isinstance(value, dict):
+                        sub = branch.add(f"[bold]{key}[/]")
+                        add_branch(sub, value)
+                    else:
+                        branch.add(f"{key} : {format_value(value)}")
+
+            add_branch(tree, data)
+            return tree
     Sozinho().cmdloop()
     
 
