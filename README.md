@@ -76,3 +76,5 @@ $ python3 -m modules.escavador --help
 
 <p align="center"><img src="assets/tool_4.png"></p><hr>
 
+# ⚠️ Aviso Legal
+- A ferramenta em nenhum momento armazena ou obtém os dados de forma ilegal, trata-se apenas de uma automatização do processo de consulta em fontes **PÚBLICAMENTE ACESSIVEIS**. O autor e contribuidores **NÃO** se responsabilizam pelo uso indevido dessa ferramenta ou das informações obtidas por ela. Seja consciente. Não sou/somos seu pai.
