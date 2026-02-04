@@ -6,6 +6,7 @@
 
 > Essa ferramenta é um protótipo do começo ao fim e tem o objetivo de ser experimental e uma base de aprendizado para projetos futuros.
 > Por esse e outros motivos — inexperiência —, estará sujeita a grandes mudanças durante o seu desenvolvimento.
+> 
 > Sobre os módulos: é completamente possível a fonte de um módulo, de um dia pro outro, simplesmente se extinguir. Não estranhe se uma forma de busca simplesmente sumir do programa
 <hr>
 
