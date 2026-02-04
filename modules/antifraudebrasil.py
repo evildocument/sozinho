@@ -28,7 +28,7 @@ def main():
     if args.name is not None:
         console.print(Align.center(antifraude_name_scrapper(args.name), vertical="middle"))
     elif args.cpf is not None:
-        print(antifraude_cpf_scrapper(args.cpf))
+        console.print(antifraude_cpf_scrapper(args.cpf))
     else:
         print("Sem resultados")
         
@@ -53,9 +53,16 @@ def antifraude_cpf_scrapper(cpf):
     response = requests.post(url, data=data).text
     response = response.replace("nome ", "")
     if len(response) == 0:
-        return "Sem resultados"
+        no_result_panel = Panel("Sem resultados para este CPF", 
+                                title=f"CPF: {str(cpf)}", 
+                                style="red")
+        return Align.center(no_result_panel) 
     else:
-        return response
+        cpf_panel = Panel(f"Nome: {response.title()}", 
+                                title=f"CPF: {str(cpf)}", 
+                                style="gold3")
+        return Align.center(cpf_panel) 
+        
 
 def antifraude_name_scrapper(name):
 
@@ -72,30 +79,40 @@ def antifraude_name_scrapper(name):
     if isinstance(texto_response["success"], bool):
         site_resposta = texto_response['redirect_url']
         site_resposta_get = requests.get(site_resposta)
+        
         soup = BeautifulSoup(site_resposta_get.text, "html.parser")
         resultados = []
+        cpf_item = soup.select(".cpf-item")
+        if cpf_item:
+            for item in cpf_item:
+                cpf = item.get("data-cpf-full")
 
-        for item in soup.select(".cpf-item"):
-            cpf = item.get("data-cpf-full")
+                nascimento = None
+                idade = None
 
-            nascimento = None
-            idade = None
+                for field in item.select(".cpf-field"):
+                    label = field.find("label").get_text(strip=True)
+                    value = field.find("strong").get_text(strip=True)
 
-            for field in item.select(".cpf-field"):
-                label = field.find("label").get_text(strip=True)
-                value = field.find("strong").get_text(strip=True)
+                    if label == "Nascimento:":
+                        nascimento = value
+                    elif label == "Idade:":
+                        idade = value
 
-                if label == "Nascimento:":
-                    nascimento = value
-                elif label == "Idade:":
-                    idade = value
-
-            resultados.append({
-                "cpf": cpf,
-                "nascimento": nascimento,
-                "idade": idade
-            })
-        return _antifraude_panels(name, resultados)
+                resultados.append({
+                    "cpf": cpf,
+                    "nascimento": nascimento,
+                    "idade": idade
+                })
+            return _antifraude_panels(name, resultados)
+        else:
+            error_panel = Panel(
+                            "Ocorreu um problema interno na AntiFraudeBrasil\n(Banco de dados fora do ar, manutenção, etc)",
+                            title="AntiFraudeBrasil",
+                            style="red"
+                        )
+            return error_panel   
+             
     else:
         error_panel = Panel(f"{texto_response["message"]}", 
                                    title=name.title(), 

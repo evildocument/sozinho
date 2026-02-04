@@ -1,8 +1,7 @@
 def sozinho():
     from modules.escavador import escavador_scrapper
     from modules.tudosobretodos import tst_scrap
-    from modules.antifraudebrasil import antifraude_name_scrapper
-    
+    from modules.antifraudebrasil import antifraude_name_scrapper, antifraude_cpf_scrapper
     import cmd
     # import inspect
     from rich.console import Console
@@ -117,7 +116,7 @@ def sozinho():
             args = list(self.flag_dict["escavador"].values())            
             print(args)
         """
-
+        
 
         def do_nome(self, arg):
             """
@@ -171,10 +170,23 @@ def sozinho():
             elif len(name_parts) == 1:
                 console.print(Align.center("[red]É necessário um nome e sobrenome![/]\n"))
             else:
-                print("Use: nome <nome>")
+                console.print("[red]Use: nome <nome>[/]")
                 
 
-                
+        def do_cpf(self, arg):
+            if len(arg) == 11:
+                cpf = arg
+                # ----- cria um painel especifico para o antifraude
+                antifraude_result = antifraude_cpf_scrapper(cpf)
+                antifraude_panel = Panel.fit(
+                            antifraude_result,
+                            title="AntiFraudeBrasil",
+                        )
+                console.print(Align.center(antifraude_panel, vertical="middle"))
+            else:
+                console.print("[red]Use: cpf <cpf>[/]")
+            
+            
         def do_exit(self, arg):
             """
             ================

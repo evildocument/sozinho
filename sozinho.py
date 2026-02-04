@@ -9,5 +9,5 @@ if __name__ == "__main__":
     sleep(0.5)
     # TODO: transformar isso em dinamico xxdxd
     console.print(Align.center("Digite '?' ou 'help' para a lista de comandos.\nOpções de busca:\n", vertical="middle"))
-    console.print(Align.center("• [bold green]Nome[/]", vertical="middle"))
+    console.print(Align.center("• [bold green]Nome[/]\n• [bold green]CPF[/]", vertical="middle"))
     main.sozinho()
